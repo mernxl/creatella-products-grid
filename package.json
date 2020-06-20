@@ -1,7 +1,9 @@
 {
-  "name": "creatella-react-app",
-  "version": "0.1.0",
+  "name": "products-grid",
   "private": true,
+  "version": "0.0.1",
+  "description": "Build a grid of product items and ads",
+  "main": "server/index.js",
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
@@ -13,8 +15,10 @@
     "json-server": "^0.9.6"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "server": "json-server server/index.js --routes server/routes.json --middlewares server/handle-delay.js server/handle-ads.js",
+    "start": "yarn run server --port 3030 & react-scripts start",
     "build": "react-scripts build",
+    "run": "yarn run build & yarn run server --static build/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

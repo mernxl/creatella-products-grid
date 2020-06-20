@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Products Grid",
+  "name": "Creatella Products Grid App",
   "icons": [
     {
       "src": "favicon.ico",
