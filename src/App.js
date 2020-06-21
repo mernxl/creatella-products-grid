@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import { ProductsGrid } from './components/ProductsGrid';
 import { API_ENDPOINT } from './config/contants';
 
 function App() {
@@ -16,7 +17,7 @@ function App() {
       </header>
 
       <section className="products">
-        ... products go here ...
+        <ProductsGrid />
       </section>
     </div>
   );
