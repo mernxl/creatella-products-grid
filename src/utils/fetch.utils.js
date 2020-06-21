@@ -74,8 +74,12 @@ export class PageHelper {
 
   prefetch = { isFetching: false, isComplete: false, prefetchListener: null };
 
-
   _data = [];
+
+  currentCache = {
+    data: [],
+    current: 0, limit: 10
+  };
 
   constructor(url: string,
               config?: { onChange: () => any, limitKey: string, pageKey: string, limit: number }
@@ -88,7 +92,20 @@ export class PageHelper {
   }
 
   getData() {
-    return this._data.slice(0, this.pageInfo.current * this.config.limit);
+    let data = this.currentCache.data;
+    const { current, limit } = this.currentCache;
+
+    // implement cache to prevent re-rendering of elements
+    if (current !== this.pageInfo.current || limit !== this.config.limit) {
+      data = this._data.slice(0, this.pageInfo.current * this.config.limit);
+
+      this.currentCache = {
+        data, limit: this.config.limit,
+        current: this.pageInfo.current
+      };
+    }
+
+    return data;
   }
 
   // include next elements to data if already fetched, else fetch new
