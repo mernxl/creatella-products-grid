@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { formatCurrency, formatDate, PageHelper } from '../utils';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AdsFactory, formatCurrency, formatDate, PageHelper } from '../utils';
+import AdsContent from './AdsContent';
 import { GridList } from './GridList';
 import './ProductsGrid.css';
 
@@ -35,7 +36,10 @@ const getNumColumns = () => Math.floor(window.screen.availWidth / (150 + 10 + 4)
 export const ProductsGrid = () => {
   const [state, setState] = useState();
   const [rowWidth, setRowWidth] = useState();
+  const [data, setData] = useState([]);
   const [numColumns, setNumColumns] = useState(getNumColumns());
+
+  const { current: adsFactory } = useRef(new AdsFactory());
 
   const pageHelper = useMemo(() => new PageHelper('/products', {
     limit: 100,
@@ -60,10 +64,28 @@ export const ProductsGrid = () => {
     setRowWidth(numColumns * (150 + 15));
   }, [numColumns, setRowWidth]);
 
-  return <GridList data={pageHelper.getData()}
+  useEffect(() => {
+    const d = Array.of(...pageHelper.getData());
+    adsFactory.reset();
+
+    if (state === 'loaded') {
+      for (let i = 20; i < d.length; i += 20) {
+        const ad = adsFactory.getNext();
+        d.splice(i, 0, { id: `_ads_${ad}`, ad: adsFactory.getNext() });
+      }
+
+      setData(d);
+    }
+  }, [adsFactory, pageHelper, state, setData]);
+
+
+  return <GridList data={data}
                    numColumns={numColumns}
                    keySelector={item => item.id}
-                   renderItem={({ item }) => <ProductCard data={item}/>}
+                   renderItem={({ item }) =>
+                     (item.ad ? <AdsContent ad={item.ad}/> :
+                       <ProductCard data={item}/>)
+                   }
                    onEndReached={() => pageHelper.next()}
                    rowStyle={{ width: rowWidth }}
                    columnStyle={{ alignItems: 'center' }}

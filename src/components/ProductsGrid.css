@@ -27,3 +27,8 @@
 .product-price {
     color: blue;
 }
+
+.ad-in-product {
+    padding: 0;
+    height: 110px; /* account for padding in vertical in product */
+}
