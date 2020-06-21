@@ -68,10 +68,12 @@ export class UrlHelper {
 
 export class PageHelper {
   url: UrlHelper;
-  state: 'init' | 'loading' | 'loaded' | 'complete' = 'init'
+  state: 'init' | 'loading' | 'loaded' | 'complete' = 'init';
   config = { pageKey: '_page', limitKey: '_limit', limit: 10 };
   pageInfo = { current: 0 };
-  isFetching = false;
+
+  prefetch = { isFetching: false, isComplete: false, prefetchListener: null };
+
 
   _data = [];
 
@@ -102,13 +104,13 @@ export class PageHelper {
       this.pageInfo.current += 1;
       this._stateChange('loaded');
 
-      if (this._data.length < this.pageInfo.current * this.config.limit) {
-        this._stateChange('complete')
+      if (this.prefetch.isComplete) {
+        this._stateChange('complete');
+      } else {
+        // fetchNext items, and store
+        return this.fetchNext();
       }
-
-      // fetchNext items, and store
-      return this.fetchNext();
-    })
+    });
   }
 
   _stateChange(state: string) {
@@ -120,9 +122,17 @@ export class PageHelper {
   }
 
   async fetchNext() {
-    // check if still fetch or current count is less than actual data, that case, already fetched
-    if (this.state === 'complete' || this.isFetching || this.pageInfo.current * this.config.limit > this._data.length) {
+    // check if still fetch or actual data greater than upto current count, in that case already fetched
+    if (this.state === 'complete' ||
+      this.prefetch.isComplete ||
+      this._data.length > this.pageInfo.current * this.config.limit) {
       return;
+    }
+
+    if (this.prefetch.isFetching) {
+      return new Promise(resolve => {
+        this.prefetch.prefetchListener = resolve;
+      });
     }
 
     this.url.setParams({
@@ -130,17 +140,29 @@ export class PageHelper {
       [ this.config.pageKey ]: this.pageInfo.current + 1,
     });
 
-    this.isFetching = true;
+    this.prefetch.isFetching = true;
 
     try {
       const data = await fetchData(this.url.getUrl());
-      // const data = await axios.request({ url: this.url.getUrl() });
+
+      // if data at any point is less than limit, then complete
+      if (data.length < this.config.limit) {
+        this.prefetch.isComplete = true;
+      }
+
+      // resolve awaiting promise
+      if (this.prefetch.prefetchListener) {
+        this.prefetch.prefetchListener();
+
+        this.prefetch.prefetchListener = null;
+      }
 
       this._data.push(...data);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-    this.isFetching = false;
+
+    this.prefetch.isFetching = false;
   }
 }
 
