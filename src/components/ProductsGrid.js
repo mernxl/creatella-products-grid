@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AdsFactory, formatCurrency, formatDate, PageHelper } from '../utils';
 import AdsContent from './AdsContent';
@@ -33,7 +34,7 @@ const ProductGridFooter = ({ state }) => {
 // 150 product card width + marginX + borderX
 const getNumColumns = () => Math.floor(window.screen.availWidth / (150 + 10 + 4));
 
-export const ProductsGrid = () => {
+export const ProductsGrid = ({ sort }) => {
   const [state, setState] = useState();
   const [rowWidth, setRowWidth] = useState();
   const [data, setData] = useState([]);
@@ -41,10 +42,18 @@ export const ProductsGrid = () => {
 
   const { current: adsFactory } = useRef(new AdsFactory());
 
-  const pageHelper = useMemo(() => new PageHelper('/products', {
-    limit: 100,
-    onChange: st => setState(st)
-  }), [setState]);
+  const pageHelper = useMemo(() => {
+    let url = '/products';
+
+    if (sort) {
+      url += `?_sort=${sort}`;
+    }
+
+    return new PageHelper(url, {
+      limit: 100,
+      onChange: st => setState(st)
+    })
+  }, [setState, sort]);
 
   useEffect(() => {
     const resizeListener = () => {
@@ -92,4 +101,8 @@ export const ProductsGrid = () => {
                    footerStyle={{ margin: '15px 0' }}
                    footerComponent={<ProductGridFooter state={state}/>}
   />;
+};
+
+ProductsGrid.propTypes = {
+  sort: PropTypes.oneOf(['', 'id', 'size', 'price'])
 };
